@@ -45,7 +45,7 @@ def initialize_model():
 
     # load documents from local directory
     documents = SimpleDirectoryReader(
-        input_dir="./app/data", required_exts=[".md"]
+        input_dir="./data", required_exts=[".md"]
     ).load_data()
 
     # create in-memory vector store index
