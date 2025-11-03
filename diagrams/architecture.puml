@@ -1,0 +1,51 @@
+@startuml system_architecture
+!theme materia
+skinparam rectangle<<behavior>> {
+    roundCorner 25
+}
+skinparam actorStyle awesome
+
+title Automated RAG System Architecture on Google Cloud
+
+' Define Actors
+actor "User / Client" as User
+
+' Define Google Cloud Platform Boundary
+package "Google Cloud Platform" {
+
+    ' Define Workflows
+    frame "1. Indexing Workflow (Event-Driven)" {
+        component "GCS Bucket\n(Source Documents)" as GCS
+        component "Cloud Function\n(Indexer)" as CF <<behavior>>
+    }
+
+    frame "2. Inference Workflow (On-Demand)" {
+        component "Cloud Run\n(FastAPI Service)" as CR <<behavior>>
+    }
+
+    ' Define Vertex AI Services
+    package "Vertex AI Services" {
+        component "Embeddings API" as EmbedAPI
+        component "Vector Search Index" as VS
+        component "Gemini 2.5 Flash API" as GeminiAPI
+    }
+}
+
+' Relationships for the Indexing Workflow
+User -right-> GCS : 1. Uploads markdown file
+GCS -down-> CF : 2. Triggers on new object
+CF -right-> GCS : 3. Reads file content
+CF -down-> EmbedAPI : 4. Generates embeddings for document chunks
+CF -right-> VS : 5. Upserts embeddings into the index
+
+
+' Relationships for the Inference Workflow
+User -right-> CR : 6. Sends API request with a question
+CR -down-> EmbedAPI : 7. Generates embedding for the question
+CR -right-> VS : 8. Searches for relevant documents
+VS -left-> CR : 9. Returns context
+CR -down-> GeminiAPI : 10. Sends question + context in prompt
+GeminiAPI -up-> CR : 11. Generates final answer
+CR -left-> User : 12. Returns answer
+
+@enduml
